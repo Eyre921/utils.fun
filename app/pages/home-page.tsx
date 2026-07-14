@@ -1,7 +1,5 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ArrowRight } from "lucide-react";
 
 import { SiteFooter } from "@/components/site-footer";
@@ -40,48 +38,43 @@ export function HomePage({
           />
         }
       />
-      <main className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-        <section>
-          <Card>
-            <CardHeader>
-              <div className="px-2 pt-1">
-                <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-                  {dict.homeTitle}
-                </h1>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-5 px-2 pb-2">
-                <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  {dict.homeIntro}
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild>
-                    <a href={`${homePath}#tools`}>
-                      {dict.toolListTitle}
-                      <ArrowRight className="size-4" />
-                    </a>
-                  </Button>
-                  <Badge variant="outline">
-                    {dict.homeStats.replace(
-                      "{count}",
-                      formatCount(dict.tools.length, locale),
-                    )}
-                  </Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <main className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10 lg:gap-12 lg:px-8 lg:py-14">
+        <section className="space-y-6">
+          <div className="max-w-3xl space-y-4">
+            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.1]">
+              {dict.homeTitle}
+            </h1>
+            <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+              {dict.homeIntro}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild className="rounded-full px-5">
+              <a href={`${homePath}#tools`}>
+                {dict.toolListTitle}
+                <ArrowRight className="size-4" />
+              </a>
+            </Button>
+            <Badge
+              variant="outline"
+              className="rounded-full border-border/80 bg-card/60 px-3 py-1 font-normal text-muted-foreground"
+            >
+              {dict.homeStats.replace(
+                "{count}",
+                formatCount(dict.tools.length, locale),
+              )}
+            </Badge>
+          </div>
         </section>
 
-        <Separator />
-
         <section id="tools" className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-semibold tracking-tight">
-              {dict.toolListTitle}
-            </h2>
-            <p className="text-muted-foreground">{dict.toolListIntro}</p>
+          <div className="flex flex-col gap-1 border-b border-border/60 pb-5 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+            <div className="space-y-1.5">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                {dict.toolListTitle}
+              </h2>
+              <p className="text-sm text-muted-foreground sm:text-base">{dict.toolListIntro}</p>
+            </div>
           </div>
           <ToolExplorer
             locale={locale}

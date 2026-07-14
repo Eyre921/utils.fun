@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+const TOOL_PAGE_SCROLL_ID = "tool-page-scroll";
+
 export function ToolRouteScrollReset() {
   const pathname = usePathname();
 
@@ -12,7 +14,12 @@ export function ToolRouteScrollReset() {
     }
 
     const frame = window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      const scroller = document.getElementById(TOOL_PAGE_SCROLL_ID);
+      if (scroller) {
+        scroller.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
     });
 
     return () => window.cancelAnimationFrame(frame);

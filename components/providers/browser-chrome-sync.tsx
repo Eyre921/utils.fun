@@ -28,15 +28,15 @@ export function BrowserChromeSync() {
 
     const sync = () => {
       const root = document.documentElement;
-      const { preference, style } = readClientThemePreference();
-      const definitions = getThemeMetaDefinitions(preference, style);
+      const { preference } = readClientThemePreference();
+      const definitions = getThemeMetaDefinitions(preference);
       const currentMode =
         preference === "system"
           ? root.classList.contains("dark")
             ? "dark"
             : "light"
           : preference;
-      const currentColor = getThemeColor(style, currentMode);
+      const currentColor = getThemeColor(currentMode);
 
       definitions.forEach((definition) => {
         const meta = ensureThemeColorMeta(definition.slot);

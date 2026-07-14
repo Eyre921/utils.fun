@@ -19,40 +19,46 @@ export function ToolLayout({
   const homePath = getHomePath(pathPrefix);
 
   return (
-    <>
-      <SiteHeader
-        locale={locale}
-        homePath={homePath}
-        pathPrefix={pathPrefix}
-        dict={dict}
-        mobileNavigationTitle={dict.categoryNavTitle}
-        mobileNavigation={
+    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-background">
+      <div className="shrink-0">
+        <SiteHeader
+          locale={locale}
+          homePath={homePath}
+          pathPrefix={pathPrefix}
+          dict={dict}
+          mobileNavigationTitle={dict.categoryNavTitle}
+          mobileNavigation={
+            <ToolSidebar
+              locale={locale}
+              pathPrefix={pathPrefix}
+              variant="docs"
+            />
+          }
+        />
+      </div>
+
+      <ToolRouteScrollReset />
+
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1">
+        <aside className="hidden min-h-0 w-[260px] shrink-0 overflow-y-auto overscroll-contain border-r border-border/60 px-3 py-5 lg:block xl:w-[280px] xl:px-4">
           <ToolSidebar
             locale={locale}
             pathPrefix={pathPrefix}
             variant="docs"
           />
-        }
-      />
-      <ToolRouteScrollReset />
-      <main className="mx-auto w-full max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8 lg:pb-12 lg:pt-8">
-        <section className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-12">
-          <aside className="hidden lg:block lg:border-r lg:border-border/60 lg:pr-8 xl:pr-10">
-            <ToolSidebar
-              locale={locale}
-              pathPrefix={pathPrefix}
-              variant="docs"
-              className="lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]"
-            />
-          </aside>
-          <div className="min-w-0 lg:py-2">
-            <div className="min-w-0 max-w-4xl">
-              {children}
-            </div>
-          </div>
-        </section>
-      </main>
-      <SiteFooter />
-    </>
+        </aside>
+
+        <main
+          id="tool-page-scroll"
+          className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7"
+        >
+          <div className="mx-auto min-w-0 max-w-4xl pb-6">{children}</div>
+        </main>
+      </div>
+
+      <div className="shrink-0 border-t border-border/60">
+        <SiteFooter flush />
+      </div>
+    </div>
   );
 }

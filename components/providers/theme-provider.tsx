@@ -5,6 +5,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { FavoritesProvider } from "@/components/providers/favorites-provider";
 import { BrowserChromeSync } from "@/components/providers/browser-chrome-sync";
 import { RouteTransitionProvider } from "@/components/providers/route-transition-provider";
+import { ScrollbarActivity } from "@/components/providers/scrollbar-activity";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         <RouteTransitionProvider>
           {children}
           <BrowserChromeSync />
+          <ScrollbarActivity />
         </RouteTransitionProvider>
       </FavoritesProvider>
     </NextThemesProvider>

@@ -8,7 +8,6 @@ import { Github } from "lucide-react";
 import { MobileSidebarDrawer } from "@/components/mobile-sidebar-drawer";
 import { useSiteConfig } from "@/components/providers/site-config-provider";
 import { LocaleToggle } from "@/components/locale-toggle";
-import { ThemeStyleToggle } from "@/components/theme-style-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ToolSearchDialog } from "@/components/tool-search-dialog";
 import { Button } from "@/components/ui/button";
@@ -36,16 +35,6 @@ export function SiteHeader({
     themeSystem: string;
     themeLight: string;
     themeDark: string;
-    themeStyleLabel: string;
-    themeStyleDefault: string;
-    themeStyleTwitter: string;
-    themeStyleDarkmatter: string;
-    themeStyleClaude: string;
-    themeStyleV2: string;
-    themeStyleTerminal: string;
-    themeStyleBrownie: string;
-    themeStyleDesignbyte: string;
-    themeStyleVercel: string;
     menuLabel: string;
     searchTools: string;
     searchDialogTitle: string;
@@ -104,20 +93,6 @@ export function SiteHeader({
               system: dict.themeSystem,
               light: dict.themeLight,
               dark: dict.themeDark,
-            }}
-          />
-          <ThemeStyleToggle
-            options={{
-              label: dict.themeStyleLabel,
-              brutalist: dict.themeStyleDefault,
-              twitter: dict.themeStyleTwitter,
-              darkmatter: dict.themeStyleDarkmatter,
-              claude: dict.themeStyleClaude,
-              v2: dict.themeStyleV2,
-              terminal: dict.themeStyleTerminal,
-              brownie: dict.themeStyleBrownie,
-              designbyte: dict.themeStyleDesignbyte,
-              vercel: dict.themeStyleVercel,
             }}
           />
           <Button asChild type="button" variant="outline" size="icon" className="size-8 shrink-0 sm:size-10">

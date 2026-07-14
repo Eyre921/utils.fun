@@ -16,10 +16,8 @@ import {
   getThemeMetaDefinitions,
   getThemeBootstrapScript,
   normalizeThemePreference,
-  normalizeThemeStyle,
   resolveThemeMode,
   THEME_COOKIE_NAME,
-  THEME_STYLE_COOKIE_NAME,
 } from "@/lib/theme-preferences";
 import "./globals.css";
 
@@ -60,13 +58,12 @@ export default async function RootLayout({
   const dict = getDictionary(locale);
   const siteConfig = getSiteConfig(locale);
   const preference = normalizeThemePreference(cookieStore.get(THEME_COOKIE_NAME)?.value);
-  const style = normalizeThemeStyle(cookieStore.get(THEME_STYLE_COOKIE_NAME)?.value);
   const mode = resolveThemeMode(preference);
-  const backgroundColor = getThemeColor(style, mode);
-  const htmlClassName = getInitialHtmlClassName(preference, style);
+  const backgroundColor = getThemeColor(mode);
+  const htmlClassName = getInitialHtmlClassName(preference);
   const htmlStyle = getInitialHtmlStyle(preference, mode, backgroundColor);
   const bodyStyle = getInitialBodyStyle(backgroundColor);
-  const themeMetaDefinitions = getThemeMetaDefinitions(preference, style);
+  const themeMetaDefinitions = getThemeMetaDefinitions(preference);
   const bootstrapScript = getThemeBootstrapScript();
 
   return (

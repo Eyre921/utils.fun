@@ -2,13 +2,18 @@
 
 import {
   CalendarClock,
+  Check,
+  ChevronDown,
   Clock3,
+  Copy,
   Download,
   History,
+  ImageDown,
   LoaderCircle,
   MonitorUp,
   Play,
   RefreshCw,
+  RotateCw,
   Sparkles,
   Square,
   WandSparkles,
@@ -38,6 +43,7 @@ import {
   useRef,
   useState,
   type ChangeEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactElement,
 } from "react";
 import { Alert as UIAlert } from "@/components/ui/alert";
@@ -67,6 +73,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea as UITextarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/code-editor";
+import { FileDropzone } from "@/components/file-dropzone";
 import { useSiteConfig } from "@/components/providers/site-config-provider";
 import { defaultLocale, getDictionary, getInlineMessageKey } from "@/lib/i18n";
 import { type Locale, type Tool } from "@/lib/tools";
@@ -1217,6 +1224,7 @@ function RandomPasswordTool({ dict }: { dict: ReturnType<typeof getDictionary> }
   const [password, setPassword] = useState("");
   const [history, setHistory] = useState<PasswordHistoryEntry[]>([]);
   const [historyReady, setHistoryReady] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = window.localStorage.getItem("utilsfun:password-history");
@@ -1349,25 +1357,55 @@ function RandomPasswordTool({ dict }: { dict: ReturnType<typeof getDictionary> }
           description={t(dict, "可快速回填最近生成的密码。", "Reuse one of the most recent generated passwords.")}
         >
           <ScrollArea className="h-64 rounded-md border border-border">
-            <div className="space-y-2 p-3">
+            <div className="space-y-1 p-2">
               {history.length ? (
-                history.map((item) => (
-                  <Button
-                    key={`${item.value}-${item.createdAt || "legacy"}`}
-                    type="button"
-                    className="h-auto w-full justify-start px-3 py-2"
-                    onClick={() => setPassword(item.value)}
-                  >
-                    <div className="grid w-full gap-1 text-left">
-                      <span className="break-all font-mono text-xs leading-5">{item.value}</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {item.createdAt && dayjs(item.createdAt).isValid()
-                          ? dayjs(item.createdAt).format("YYYY-MM-DD HH:mm:ss")
-                          : t(dict, "时间未知", "Unknown time")}
-                      </span>
+                history.map((item) => {
+                  const rowKey = `${item.value}-${item.createdAt || "legacy"}`;
+                  const timeLabel =
+                    item.createdAt && dayjs(item.createdAt).isValid()
+                      ? dayjs(item.createdAt).format("YYYY-MM-DD HH:mm:ss")
+                      : t(dict, "时间未知", "Unknown time");
+                  const isCopied = copiedKey === rowKey;
+
+                  return (
+                    <div
+                      key={rowKey}
+                      className="flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 hover:bg-muted/60"
+                    >
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        className="size-8 shrink-0"
+                        title={isCopied ? dict.copied : dict.copy}
+                        aria-label={isCopied ? dict.copied : dict.copy}
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          await navigator.clipboard.writeText(item.value);
+                          setCopiedKey(rowKey);
+                          window.setTimeout(() => {
+                            setCopiedKey((current) => (current === rowKey ? null : current));
+                          }, 1200);
+                        }}
+                      >
+                        {isCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                      </Button>
+                      <button
+                        type="button"
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        onClick={() => setPassword(item.value)}
+                        title={t(dict, "点击回填到输出", "Click to fill into output")}
+                      >
+                        <span className="min-w-0 flex-1 truncate font-mono text-xs leading-5">
+                          {item.value}
+                        </span>
+                        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                          {timeLabel}
+                        </span>
+                      </button>
                     </div>
-                  </Button>
-                ))
+                  );
+                })
               ) : (
                 <div className="flex min-h-40 items-center justify-center px-4 text-center text-sm text-muted-foreground">
                   {dict.noHistory}
@@ -1490,10 +1528,17 @@ function QrCodeTool({ dict }: { dict: ReturnType<typeof getDictionary> }) {
           </FormGrid>
           <FormGrid>
             <Field label={t(dict, "Logo 图片", "Logo image")}>
-              <Input
-                type="file"
+              <FileDropzone
                 accept="image/*"
-                onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                files={logoFile ? [logoFile] : []}
+                label={t(dict, "上传 Logo", "Upload logo")}
+                hint={t(
+                  dict,
+                  "支持拖拽、粘贴或点击选择图片",
+                  "Drag, paste, or click to choose an image",
+                )}
+                onFiles={(nextFiles) => setLogoFile(nextFiles[0] ?? null)}
+                onClear={() => setLogoFile(null)}
               />
             </Field>
             <NativeSelect
@@ -1641,9 +1686,20 @@ function WatermarkTool({
 }: {
   dict: ReturnType<typeof getDictionary>;
 }) {
-  const siteConfig = useSiteConfig();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const renderRequestRef = useRef(0);
+  const dragRef = useRef<{
+    mode: "move" | "scale" | "rotate";
+    startX: number;
+    startY: number;
+    originPosX: number;
+    originPosY: number;
+    originSize: number;
+    originRotate: number;
+    startAngle: number;
+  } | null>(null);
+
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState(() =>
     t(
@@ -1656,9 +1712,25 @@ function WatermarkTool({
   const [size, setSize] = useState(24);
   const [alpha, setAlpha] = useState(24);
   const [rotate, setRotate] = useState(-30);
+  const [singleLine, setSingleLine] = useState(false);
+  /** Normalized center position on the image (0–1). */
+  const [posX, setPosX] = useState(0.5);
+  const [posY, setPosY] = useState(0.5);
   const [imageUrl, setImageUrl] = useState("");
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [resultUrl, setResultUrl] = useState("");
+  const [resultBlob, setResultBlob] = useState<Blob | null>(null);
   const [rendering, setRendering] = useState(false);
+  const [compressOpen, setCompressOpen] = useState(false);
+  const [compressEnabled, setCompressEnabled] = useState(false);
+  const [compressQuality, setCompressQuality] = useState(0.7);
+  const [compressMaxWidth, setCompressMaxWidth] = useState(1600);
+  const [compressStats, setCompressStats] = useState<{ before: number; after: number } | null>(
+    null,
+  );
+  const [compareView, setCompareView] = useState(false);
+  const [wmControlsActive, setWmControlsActive] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -1676,9 +1748,30 @@ function WatermarkTool({
     };
   }, [resultUrl]);
 
-  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const nextFile = event.target.files?.[0] ?? null;
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) {
+      return;
+    }
+
+    const update = () => {
+      const rect = stage.getBoundingClientRect();
+      setStageSize({ width: rect.width, height: rect.height });
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, [imageUrl, singleLine, compareView]);
+
+  function applySourceFile(nextFile: File | null) {
     setFile(nextFile);
+    setCompressStats(null);
+    setResultBlob(null);
+    setPosX(0.5);
+    setPosY(0.5);
+    setNaturalSize({ width: 0, height: 0 });
     setResultUrl((current) => {
       if (current) {
         URL.revokeObjectURL(current);
@@ -1697,6 +1790,8 @@ function WatermarkTool({
     if (!file || !canvasRef.current) {
       renderRequestRef.current += 1;
       setRendering(false);
+      setCompressStats(null);
+      setResultBlob(null);
       return;
     }
 
@@ -1723,38 +1818,88 @@ function WatermarkTool({
 
         canvas.width = bitmap.width;
         canvas.height = bitmap.height;
+        setNaturalSize({ width: bitmap.width, height: bitmap.height });
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bitmap, 0, 0);
+
         ctx.fillStyle = color;
         ctx.globalAlpha = alpha / 100;
         ctx.font = `${size}px sans-serif`;
-        ctx.rotate((rotate * Math.PI) / 180);
-        const xGap = size * Math.max(text.length, 4);
-        const yGap = size * 3;
-        for (let x = -canvas.width; x < canvas.width * 1.5; x += xGap) {
-          for (let y = -canvas.height; y < canvas.height * 1.5; y += yGap) {
-            ctx.fillText(text, x, y);
+
+        if (singleLine) {
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const cx = canvas.width * posX;
+          const cy = canvas.height * posY;
+          ctx.translate(cx, cy);
+          ctx.rotate((rotate * Math.PI) / 180);
+          ctx.fillText(text, 0, 0);
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+        } else {
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
+          ctx.rotate((rotate * Math.PI) / 180);
+          const xGap = size * Math.max(text.length, 4);
+          const yGap = size * 3;
+          for (let x = -canvas.width; x < canvas.width * 1.5; x += xGap) {
+            for (let y = -canvas.height; y < canvas.height * 1.5; y += yGap) {
+              ctx.fillText(text, x, y);
+            }
           }
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
         }
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
         ctx.globalAlpha = 1;
 
-        const blob = await new Promise<Blob | null>((resolve) => {
+        const watermarkedBlob = await new Promise<Blob | null>((resolve) => {
           canvas.toBlob((nextBlob) => resolve(nextBlob), "image/png");
         });
 
-        if (!blob || !isActive || requestId !== renderRequestRef.current) {
+        if (!watermarkedBlob || !isActive || requestId !== renderRequestRef.current) {
           return;
         }
 
+        let outputBlob: Blob = watermarkedBlob;
+        let stats: { before: number; after: number } | null = null;
+
+        if (compressEnabled) {
+          const watermarkedFile = new File(
+            [watermarkedBlob],
+            currentFile.name.replace(/\.[^.]+$/, "") || "watermarked",
+            { type: "image/png" },
+          );
+          const compressed = await imageCompression(watermarkedFile, {
+            initialQuality: compressQuality,
+            maxWidthOrHeight: compressMaxWidth,
+            useWebWorker: true,
+            fileType: "image/jpeg",
+          });
+          if (!isActive || requestId !== renderRequestRef.current) {
+            return;
+          }
+          outputBlob = compressed;
+          stats = { before: watermarkedBlob.size, after: compressed.size };
+        }
+
+        if (!isActive || requestId !== renderRequestRef.current) {
+          return;
+        }
+
+        setCompressStats(stats);
+        setResultBlob(outputBlob);
         setResultUrl((current) => {
           if (current) {
             URL.revokeObjectURL(current);
           }
-          return URL.createObjectURL(blob);
+          return URL.createObjectURL(outputBlob);
         });
       } catch {
+        if (!isActive || requestId !== renderRequestRef.current) {
+          return;
+        }
+        setCompressStats(null);
+        setResultBlob(null);
         setResultUrl((current) => {
           if (current) {
             URL.revokeObjectURL(current);
@@ -1774,64 +1919,442 @@ function WatermarkTool({
     return () => {
       isActive = false;
     };
-  }, [alpha, color, file, rotate, size, text]);
+  }, [
+    alpha,
+    color,
+    compressEnabled,
+    compressMaxWidth,
+    compressQuality,
+    file,
+    posX,
+    posY,
+    rotate,
+    singleLine,
+    size,
+    text,
+  ]);
 
   function download() {
-    if (!canvasRef.current || !resultUrl) {
+    if (!resultBlob || !resultUrl) {
       return;
     }
-    canvasRef.current.toBlob((blob) => {
-      if (!blob) {
-        return;
-      }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `watermark-${Date.now()}.png`;
-      link.click();
-      URL.revokeObjectURL(url);
-    });
+    const extension = resultBlob.type.includes("jpeg") || resultBlob.type.includes("jpg")
+      ? "jpg"
+      : resultBlob.type.includes("webp")
+        ? "webp"
+        : "png";
+    const link = document.createElement("a");
+    link.href = resultUrl;
+    link.download = `watermark-${Date.now()}.${extension}`;
+    link.click();
   }
+
+  const displayScale =
+    naturalSize.width > 0 && stageSize.width > 0
+      ? stageSize.width / naturalSize.width
+      : 1;
+  const displayFontPx = Math.max(8, size * displayScale);
+  const textMetricsWidth = Math.max(
+    displayFontPx * Math.max(text.length, 1) * 0.55,
+    displayFontPx * 2,
+  );
+  const textMetricsHeight = displayFontPx * 1.4;
+  const boxLeftPct = posX * 100;
+  const boxTopPct = posY * 100;
+
+  function angleAt(clientX: number, clientY: number, centerX: number, centerY: number) {
+    return (Math.atan2(clientY - centerY, clientX - centerX) * 180) / Math.PI;
+  }
+
+  function normalizeRotate(deg: number) {
+    let next = deg % 360;
+    if (next > 180) {
+      next -= 360;
+    }
+    if (next < -180) {
+      next += 360;
+    }
+    return Math.round(Math.min(180, Math.max(-180, next)));
+  }
+
+  function onPointerMove(event: PointerEvent) {
+    const drag = dragRef.current;
+    const stage = stageRef.current;
+    if (!drag || !stage) {
+      return;
+    }
+
+    const rect = stage.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) {
+      return;
+    }
+
+    const centerX = rect.left + drag.originPosX * rect.width;
+    const centerY = rect.top + drag.originPosY * rect.height;
+
+    if (drag.mode === "move") {
+      const dx = (event.clientX - drag.startX) / rect.width;
+      const dy = (event.clientY - drag.startY) / rect.height;
+      setPosX(Math.min(1, Math.max(0, drag.originPosX + dx)));
+      setPosY(Math.min(1, Math.max(0, drag.originPosY + dy)));
+      return;
+    }
+
+    if (drag.mode === "rotate") {
+      const currentAngle = angleAt(event.clientX, event.clientY, centerX, centerY);
+      const delta = currentAngle - drag.startAngle;
+      setRotate(normalizeRotate(drag.originRotate + delta));
+      return;
+    }
+
+    // Scale from bottom-right handle: drag away from center increases font size.
+    const startDist = Math.hypot(drag.startX - centerX, drag.startY - centerY) || 1;
+    const currentDist = Math.hypot(event.clientX - centerX, event.clientY - centerY);
+    const ratio = currentDist / startDist;
+    const nextSize = Math.round(
+      Math.min(240, Math.max(12, drag.originSize * ratio)),
+    );
+    setSize(nextSize);
+  }
+
+  function endPointerDrag() {
+    dragRef.current = null;
+    setWmControlsActive(false);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", endPointerDrag);
+  }
+
+  function beginDrag(mode: "move" | "scale" | "rotate", event: ReactPointerEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const stage = stageRef.current;
+    const rect = stage?.getBoundingClientRect();
+    const centerX = rect ? rect.left + posX * rect.width : event.clientX;
+    const centerY = rect ? rect.top + posY * rect.height : event.clientY;
+    setWmControlsActive(true);
+    dragRef.current = {
+      mode,
+      startX: event.clientX,
+      startY: event.clientY,
+      originPosX: posX,
+      originPosY: posY,
+      originSize: size,
+      originRotate: rotate,
+      startAngle: angleAt(event.clientX, event.clientY, centerX, centerY),
+    };
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", endPointerDrag);
+  }
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", endPointerDrag);
+    };
+    // Cleanup only on unmount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const showInteractive = Boolean(imageUrl && singleLine && !compareView);
+  const showResultImage = Boolean(imageUrl && (!singleLine || compareView));
 
   return (
     <ToolCard title={dict.generate}>
       <FormStack className="gap-4">
         <FormStack className="gap-4">
           <Field label={t(dict, "图片", "Image")}>
-            <Input type="file" accept="image/*" onChange={onFileChange} />
+            <FileDropzone
+              accept="image/*"
+              files={file ? [file] : []}
+              label={t(dict, "上传图片", "Upload image")}
+              hint={t(
+                dict,
+                "支持拖拽、粘贴或点击选择",
+                "Drag, paste, or click to choose",
+              )}
+              onFiles={(nextFiles) => applySourceFile(nextFiles[0] ?? null)}
+              onClear={() => applySourceFile(null)}
+            />
           </Field>
           <Field label={t(dict, "文字", "Text")}>
             <Input value={text} onChange={(event) => setText(event.target.value)} />
           </Field>
+
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 px-3 py-2.5">
+            <div className="space-y-0.5">
+              <div className="text-sm font-medium">
+                {t(dict, "单行模式", "Single-line mode")}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  dict,
+                  "仅在正中央生成一条水印，可拖拽移动与缩放。",
+                  "Place a single watermark you can drag to move and resize.",
+                )}
+              </p>
+            </div>
+            <Switch
+              checked={singleLine}
+              onCheckedChange={(checked) => {
+                setSingleLine(checked);
+                if (checked) {
+                  setPosX(0.5);
+                  setPosY(0.5);
+                  setCompareView(false);
+                  if (rotate === -30) {
+                    setRotate(0);
+                  }
+                }
+              }}
+            />
+          </label>
+
           <FormGrid className="gap-4">
             <Field label={t(dict, "颜色", "Color")}>
               <Input type="color" value={color} onChange={(event) => setColor(event.target.value)} />
             </Field>
             <SliderField label={t(dict, "透明度", "Opacity")} value={alpha} min={5} max={100} suffix="%" onChange={setAlpha} />
-            <SliderField label={t(dict, "字号", "Size")} value={size} min={12} max={64} suffix="px" onChange={setSize} />
+            <SliderField
+              label={t(dict, "字号", "Size")}
+              value={size}
+              min={12}
+              max={singleLine ? 240 : 64}
+              suffix="px"
+              onChange={setSize}
+            />
             <SliderField
               label={t(dict, "旋转角度", "Rotate")}
               value={rotate}
-              min={-90}
-              max={90}
+              min={singleLine ? -180 : -90}
+              max={singleLine ? 180 : 90}
               suffix="°"
               onChange={setRotate}
             />
           </FormGrid>
-          <div className="flex flex-wrap gap-2">
+
+          <div className="overflow-hidden rounded-2xl border border-border/70">
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50"
+              onClick={() => setCompressOpen((open) => !open)}
+              aria-expanded={compressOpen}
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted/40">
+                  <ImageDown className="size-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium">
+                    {t(dict, "图片压缩", "Image compression")}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {compressEnabled
+                      ? t(
+                          dict,
+                          "已开启：加水印后自动压缩再输出",
+                          "On: compress automatically after watermarking",
+                        )
+                      : t(
+                          dict,
+                          "默认关闭，展开后可配置并启用",
+                          "Off by default — expand to configure and enable",
+                        )}
+                  </span>
+                </span>
+              </span>
+              <ChevronDown
+                className={cn(
+                  "size-4 shrink-0 text-muted-foreground transition-transform",
+                  compressOpen && "rotate-180",
+                )}
+              />
+            </button>
+            {compressOpen ? (
+              <div className="grid gap-4 border-t border-border/70 px-4 py-4">
+                <label className="flex items-center justify-between gap-3 rounded-xl border border-border/70 px-3 py-2.5">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium">
+                      {t(dict, "加水印后自动压缩", "Auto-compress after watermark")}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        dict,
+                        "开启后预览与下载都会使用压缩结果，无需二次处理。",
+                        "When enabled, preview and download use the compressed result — no second pass.",
+                      )}
+                    </p>
+                  </div>
+                  <Switch checked={compressEnabled} onCheckedChange={setCompressEnabled} />
+                </label>
+                <SliderField
+                  label={t(dict, "质量", "Quality")}
+                  value={Math.round(compressQuality * 100)}
+                  min={10}
+                  max={100}
+                  suffix="%"
+                  onChange={(value) => setCompressQuality(value / 100)}
+                />
+                <SliderField
+                  label={t(dict, "最大宽度", "Max width")}
+                  value={compressMaxWidth}
+                  min={320}
+                  max={4000}
+                  step={20}
+                  suffix="px"
+                  onChange={setCompressMaxWidth}
+                />
+                {compressEnabled && compressStats ? (
+                  <Alert
+                    color="success"
+                    title={t(dict, "压缩结果", "Compression summary")}
+                    description={
+                      isZh(dict)
+                        ? `水印图 ${(compressStats.before / 1024).toFixed(1)} KB → 压缩后 ${(compressStats.after / 1024).toFixed(1)} KB。`
+                        : `Watermarked ${(compressStats.before / 1024).toFixed(1)} KB → compressed ${(compressStats.after / 1024).toFixed(1)} KB.`
+                    }
+                  />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
             <Button type="button" onClick={download} disabled={!resultUrl || rendering}>
               {rendering ? <LoaderCircle className="size-4 animate-spin" /> : <Download className="size-4" />}
               {dict.download}
             </Button>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Switch
+                checked={compareView}
+                onCheckedChange={setCompareView}
+                disabled={singleLine}
+              />
+              <span>
+                {t(dict, "对比视图", "Compare view")}
+                {singleLine
+                  ? t(dict, "（单行模式暂不可用）", " (unavailable in single-line)")
+                  : null}
+              </span>
+            </label>
           </div>
         </FormStack>
         <FormStack className="gap-3">
-          {imageUrl ? (
+          {imageUrl && resultUrl && compareView && !singleLine ? (
+            <ImageComparePreview
+              beforeSrc={imageUrl}
+              afterSrc={resultUrl}
+              beforeAlt={t(dict, "原图", "Original")}
+              afterAlt={
+                compressEnabled
+                  ? t(dict, "加水印并压缩后", "Watermarked & compressed")
+                  : t(dict, "加水印后", "Watermarked")
+              }
+              beforeLabel={t(dict, "原图", "Before")}
+              afterLabel={
+                compressEnabled
+                  ? t(dict, "结果", "After")
+                  : t(dict, "水印", "After")
+              }
+            />
+          ) : showInteractive ? (
+            <div
+              ref={stageRef}
+              className="relative overflow-hidden rounded-xl border border-border/70 bg-muted/20 select-none"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={t(dict, "原图", "Original")}
+                className="pointer-events-none block w-full"
+                draggable={false}
+              />
+              <div
+                className={cn(
+                  "group/wm absolute z-10 touch-none",
+                  // Expand hit-box so rotate/scale handles stay inside hover group
+                )}
+                style={{
+                  left: `${boxLeftPct}%`,
+                  top: `${boxTopPct}%`,
+                  transform: `translate(-50%, -50%) rotate(${rotate}deg)`,
+                }}
+              >
+                {/* Padding keeps handles inside the hover target */}
+                <div className="relative px-4 pt-9 pb-4">
+                  <div
+                    className={cn(
+                      "relative cursor-move rounded-md px-3 py-2 transition-[background-color,box-shadow] duration-150",
+                      // No border by default — dashed yellow only on hover / while dragging
+                      wmControlsActive
+                        ? "border-2 border-dashed border-amber-400 bg-background/10 shadow-sm backdrop-blur-[1px]"
+                        : "border-0 border-solid border-transparent bg-transparent group-hover/wm:border-2 group-hover/wm:border-dashed group-hover/wm:border-amber-400 group-hover/wm:bg-background/10 group-hover/wm:shadow-sm group-hover/wm:backdrop-blur-[1px] group-focus-within/wm:border-2 group-focus-within/wm:border-dashed group-focus-within/wm:border-amber-400 group-focus-within/wm:bg-background/10",
+                    )}
+                    style={{
+                      color,
+                      opacity: alpha / 100,
+                      fontSize: displayFontPx,
+                      lineHeight: 1.2,
+                      whiteSpace: "nowrap",
+                      minWidth: textMetricsWidth,
+                      minHeight: textMetricsHeight,
+                    }}
+                    onPointerDown={(event) => beginDrag("move", event)}
+                  >
+                    <span className="pointer-events-none font-sans">{text || " "}</span>
+                  </div>
+
+                  {/* Connector line to rotate handle */}
+                  <span
+                    className={cn(
+                      "pointer-events-none absolute top-3 left-1/2 h-4 w-px -translate-x-1/2 bg-amber-400 transition-opacity",
+                      wmControlsActive
+                        ? "opacity-100"
+                        : "opacity-0 group-hover/wm:opacity-100 group-focus-within/wm:opacity-100",
+                    )}
+                  />
+                  <button
+                    type="button"
+                    aria-label={t(dict, "拖拽旋转", "Drag to rotate")}
+                    title={t(dict, "拖拽旋转", "Drag to rotate")}
+                    className={cn(
+                      "absolute top-0 left-1/2 flex size-7 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-amber-400 bg-amber-400 text-black shadow transition-opacity active:cursor-grabbing",
+                      wmControlsActive
+                        ? "opacity-100"
+                        : "opacity-0 group-hover/wm:opacity-100 group-focus-within/wm:opacity-100",
+                    )}
+                    onPointerDown={(event) => beginDrag("rotate", event)}
+                  >
+                    <RotateCw className="size-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t(dict, "拖拽缩放", "Drag to scale")}
+                    title={t(dict, "拖拽缩放", "Drag to scale")}
+                    className={cn(
+                      "absolute right-1 bottom-1 flex size-6 cursor-nwse-resize items-center justify-center rounded-sm border-2 border-amber-400 bg-amber-400 text-black shadow transition-opacity",
+                      wmControlsActive
+                        ? "opacity-100"
+                        : "opacity-0 group-hover/wm:opacity-100 group-focus-within/wm:opacity-100",
+                    )}
+                    onPointerDown={(event) => beginDrag("scale", event)}
+                  >
+                    <span className="block size-2 rounded-[1px] border border-black/60 border-t-transparent border-l-transparent" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : showResultImage || imageUrl ? (
             <div className="overflow-hidden rounded-xl border border-border/70 bg-muted/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={resultUrl || imageUrl}
-                alt={resultUrl ? t(dict, "加水印后", "Watermarked") : t(dict, "原图", "Original")}
+                alt={
+                  resultUrl
+                    ? compressEnabled
+                      ? t(dict, "加水印并压缩后", "Watermarked & compressed")
+                      : t(dict, "加水印后", "Watermarked")
+                    : t(dict, "原图", "Original")
+                }
                 className="w-full"
               />
             </div>
@@ -1841,8 +2364,8 @@ function WatermarkTool({
               title={t(dict, "请先上传图片", "Upload an image first")}
               description={t(
                 dict,
-                "原图预览和加水印后的结果会显示在这里。",
-                "The preview and watermarked result will appear here.",
+                "加水印结果会显示在这里；单行模式可拖拽移动、缩放与旋转。",
+                "The watermarked result appears here. In single-line mode you can drag to move, scale, and rotate.",
               )}
             />
           )}
@@ -1850,12 +2373,30 @@ function WatermarkTool({
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
               {rendering ? <LoaderCircle className="size-4 animate-spin" /> : null}
               {rendering
-                ? t(dict, "正在生成最新水印预览…", "Generating the latest watermark preview...")
-                : t(
-                    dict,
-                    "上传图片后会立即生成预览，调整参数也会自动更新。",
-                    "A preview is generated right after upload and updates automatically as you tweak settings.",
-                  )}
+                ? compressEnabled
+                  ? t(
+                      dict,
+                      "正在生成水印并自动压缩…",
+                      "Applying watermark and compressing…",
+                    )
+                  : t(dict, "正在生成最新水印预览…", "Generating the latest watermark preview...")
+                : singleLine
+                  ? t(
+                      dict,
+                      "拖拽文字移动，顶部手柄旋转，右下角手柄缩放。",
+                      "Drag text to move, top handle to rotate, corner handle to scale.",
+                    )
+                  : compareView && resultUrl
+                    ? t(
+                        dict,
+                        "可拖动滑块对比原图与处理结果。",
+                        "Drag the slider to compare original vs result.",
+                      )
+                    : t(
+                        dict,
+                        "上传图片后会立即生成预览，调整参数也会自动更新。",
+                        "A preview is generated right after upload and updates automatically as you tweak settings.",
+                      )}
             </p>
           ) : null}
           <canvas ref={canvasRef} className="hidden" />
@@ -1891,8 +2432,7 @@ function ImageCompressTool({ dict }: { dict: ReturnType<typeof getDictionary> })
     };
   }, [afterUrl]);
 
-  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const nextFile = event.target.files?.[0] ?? null;
+  function applySourceFile(nextFile: File | null) {
     setFile(nextFile);
     if (!nextFile) {
       setBeforeUrl("");
@@ -1938,10 +2478,17 @@ function ImageCompressTool({ dict }: { dict: ReturnType<typeof getDictionary> })
           description={t(dict, "调整画质和宽度后，在本地生成压缩结果。", "Adjust quality and width, then generate a smaller image locally.")}
         >
           <Field label={t(dict, "图片", "Image")}>
-            <Input
-              type="file"
+            <FileDropzone
               accept="image/*"
-              onChange={onFileChange}
+              files={file ? [file] : []}
+              label={t(dict, "上传图片", "Upload image")}
+              hint={t(
+                dict,
+                "支持拖拽、粘贴或点击选择",
+                "Drag, paste, or click to choose",
+              )}
+              onFiles={(nextFiles) => applySourceFile(nextFiles[0] ?? null)}
+              onClear={() => applySourceFile(null)}
             />
           </Field>
           <SliderField
@@ -2069,9 +2616,22 @@ function FileMd5Tool({ dict }: { dict: ReturnType<typeof getDictionary> }) {
   return (
     <ToolCard title="MD5">
       <Field label={t(dict, "文件", "File")}>
-        <Input
-          type="file"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+        <FileDropzone
+          files={file ? [file] : []}
+          label={t(dict, "上传文件", "Upload file")}
+          hint={t(
+            dict,
+            "支持拖拽、粘贴或点击选择任意文件",
+            "Drag, paste, or click to choose any file",
+          )}
+          onFiles={(nextFiles) => {
+            setFile(nextFiles[0] ?? null);
+            setHash("");
+          }}
+          onClear={() => {
+            setFile(null);
+            setHash("");
+          }}
         />
       </Field>
       <Button type="button" onClick={calculate} disabled={!file || loading} color="primary">
@@ -4607,11 +5167,17 @@ function QrCodeDecodeTool({ dict }: { dict: ReturnType<typeof getDictionary> }) 
           )}
         >
           <Field label={t(dict, "图片文件", "Image file")}>
-            <Input
-              type="file"
+            <FileDropzone
               accept="image/*"
-              onChange={(event) => {
-                const nextFile = event.target.files?.[0] ?? null;
+              files={file ? [file] : []}
+              label={t(dict, "上传二维码图片", "Upload QR image")}
+              hint={t(
+                dict,
+                "支持拖拽、粘贴或点击选择",
+                "Drag, paste, or click to choose",
+              )}
+              onFiles={(nextFiles) => {
+                const nextFile = nextFiles[0] ?? null;
                 setFile(nextFile);
                 setOutput("");
                 setError("");
@@ -4621,6 +5187,13 @@ function QrCodeDecodeTool({ dict }: { dict: ReturnType<typeof getDictionary> }) 
                   return;
                 }
                 void decodeFile(nextFile);
+              }}
+              onClear={() => {
+                setFile(null);
+                setOutput("");
+                setError("");
+                decodeRequestRef.current += 1;
+                setDecoding(false);
               }}
             />
           </Field>

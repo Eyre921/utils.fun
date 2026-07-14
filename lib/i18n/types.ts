@@ -12,16 +12,6 @@ export type DictionaryMessages = {
   themeSystem: string;
   themeLight: string;
   themeDark: string;
-  themeStyleLabel: string;
-  themeStyleDefault: string;
-  themeStyleTwitter: string;
-  themeStyleDarkmatter: string;
-  themeStyleClaude: string;
-  themeStyleV2: string;
-  themeStyleTerminal: string;
-  themeStyleBrownie: string;
-  themeStyleDesignbyte: string;
-  themeStyleVercel: string;
   homeTitle: string;
   homeIntro: string;
   homeStats: string;

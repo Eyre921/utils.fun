@@ -3,8 +3,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { ToolFavoriteButton } from "@/components/tool-favorite-button";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ToolIcon } from "@/components/tool-icon";
+import { ToolIconWell } from "@/components/tool-icon";
 import { ToolWorkbench } from "@/components/tool-workbench";
 import { getDictionary } from "@/lib/i18n";
 import { getHomePath, type PathPrefix } from "@/lib/locale";
@@ -29,40 +28,37 @@ export function ToolPage({
   const homePath = getHomePath(pathPrefix);
 
   return (
-    <div className="min-w-0 space-y-10">
-      <section className="space-y-5 border-b border-border/60 pb-8">
-        <div className="flex items-start gap-4">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background sm:size-12">
-            <ToolIcon slug={tool.slug} className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-3">
+    <div className="min-w-0 space-y-8">
+      <section className="border-b border-border/60 pb-7">
+        <div className="flex items-start gap-4 sm:gap-5">
+          <ToolIconWell
+            slug={tool.slug}
+            className="size-12 rounded-2xl sm:size-14"
+            iconClassName="size-6 sm:size-7"
+          />
+          <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="min-w-0 flex-1 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <h1 className="min-w-0 flex-1 text-2xl font-semibold tracking-tight sm:text-3xl sm:leading-tight">
                 {tool.title[locale]}
               </h1>
               <ToolFavoriteButton
                 slug={tool.slug}
                 locale={locale}
                 title={tool.title[locale]}
-                className="size-10"
+                className="size-10 shrink-0"
               />
             </div>
-            <p className="max-w-3xl text-base leading-7 text-muted-foreground">
+            <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
               {tool.description[locale]}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {tool.highlights[locale].map((item) => (
-                <Badge key={item} variant="outline" className="rounded-full px-2.5 py-0.5">
-                  {item}
-                </Badge>
-              ))}
-            </div>
           </div>
         </div>
       </section>
+
       <ToolWorkbench tool={tool} locale={locale} dict={dict} />
-      <div className="w-full">
-        <Button asChild variant="ghost">
+
+      <div className="w-full pt-1">
+        <Button asChild variant="ghost" className="rounded-xl px-3 text-muted-foreground hover:text-foreground">
           <Link href={homePath} scroll>
             <ArrowLeft className="size-4" />
             {dict.backHome}

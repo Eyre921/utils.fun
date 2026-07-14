@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
-import { ToolIcon } from "@/components/tool-icon";
+import { ToolIconWell } from "@/components/tool-icon";
 import { useRouteTransition } from "@/components/providers/route-transition-provider";
 import { getDictionary } from "@/lib/i18n";
 import { buildToolPath, type PathPrefix } from "@/lib/locale";
@@ -116,13 +116,13 @@ export function ToolSearchDialog({
           <div>
             <div className="space-y-4">
               <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute top-1/2 left-3 z-20 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   autoFocus
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={dict.searchPlaceholder}
-                  className="pr-24 pl-9"
+                  className="pr-24 pl-10"
                   clearButtonClassName="right-11"
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && results[0]) {
@@ -131,7 +131,7 @@ export function ToolSearchDialog({
                     }
                   }}
                 />
-                <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+                <div className="pointer-events-none absolute top-1/2 right-3 z-20 -translate-y-1/2">
                   <Kbd>ESC</Kbd>
                 </div>
               </div>
@@ -147,11 +147,15 @@ export function ToolSearchDialog({
                           <button
                             key={tool.slug}
                             type="button"
-                            className="flex w-full items-start gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent"
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent"
                             onClick={() => openTool(tool)}
                           >
-                            <ToolIcon slug={tool.slug} className="mt-0.5 size-5 shrink-0" />
-                            <div className="min-w-0 space-y-1">
+                            <ToolIconWell
+                              slug={tool.slug}
+                              className="size-9 rounded-lg shadow-none"
+                              iconClassName="size-4"
+                            />
+                            <div className="min-w-0 space-y-0.5">
                               <div className="text-sm font-medium">{tool.title[locale]}</div>
                               <div className="line-clamp-2 text-sm text-muted-foreground">
                                 {`${category?.title[locale] ?? ""} · ${tool.description[locale]}`}
