@@ -58,7 +58,7 @@ export function ThemeToggle({
       variant="outline"
       size="icon"
       aria-label={options.label}
-      className={cn("size-8 sm:size-10", triggerClassName)}
+      className={cn("size-11 min-h-11 min-w-11", triggerClassName)}
     >
       <CurrentIcon className="size-3.5 sm:size-4" />
     </Button>

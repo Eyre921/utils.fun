@@ -35,6 +35,7 @@ export function ToolPage({
             slug={tool.slug}
             className="size-12 rounded-2xl sm:size-14"
             iconClassName="size-6 sm:size-7"
+            eagerIcon
           />
           <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
             <div className="flex items-start justify-between gap-3">
@@ -45,6 +46,8 @@ export function ToolPage({
                 slug={tool.slug}
                 locale={locale}
                 title={tool.title[locale]}
+                addLabel={dict.addFavorite}
+                removeLabel={dict.removeFavorite}
                 className="size-10 shrink-0"
               />
             </div>
@@ -58,8 +61,8 @@ export function ToolPage({
       <ToolWorkbench tool={tool} locale={locale} dict={dict} />
 
       <div className="w-full pt-1">
-        <Button asChild variant="ghost" className="rounded-xl px-3 text-muted-foreground hover:text-foreground">
-          <Link href={homePath} scroll>
+        <Button asChild variant="ghost" className="rounded-xl px-3 text-muted-foreground no-underline hover:text-foreground hover:no-underline">
+          <Link href={homePath} scroll className="no-underline hover:no-underline">
             <ArrowLeft className="size-4" />
             {dict.backHome}
           </Link>

@@ -1,4 +1,7 @@
+"use client";
+
 import type { LucideProps, LucideIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   AlarmClock,
   BadgeDollarSign,
@@ -65,6 +68,30 @@ import {
 import type { CategorySlug, ToolSlug } from "@/lib/tools";
 import { cn } from "@/lib/utils";
 
+/** Client-only icon mount — keeps catalog HTML free of Lucide path trees. */
+export function LazyToolIcon({
+  slug,
+  className,
+  strokeWidth,
+}: {
+  slug: ToolSlug;
+  className?: string;
+  strokeWidth?: number;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  if (!mounted) {
+    return <span className={cn("block", className)} aria-hidden />;
+  }
+
+  return <ToolIcon slug={slug} className={className} strokeWidth={strokeWidth} />;
+}
+
 /** Soft tint wells — distinct hues so dense tool grids stay scannable */
 const TOOL_ICON_TONES = [
   "border-sky-500/20 bg-sky-500/12 text-sky-600 dark:text-sky-400",
@@ -79,6 +106,22 @@ const TOOL_ICON_TONES = [
   "border-fuchsia-500/20 bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-400",
   "border-lime-500/25 bg-lime-500/12 text-lime-700 dark:text-lime-400",
   "border-blue-500/20 bg-blue-500/12 text-blue-600 dark:text-blue-400",
+] as const;
+
+/** Vivid accent colors for decorative hover watermarks (same hue family as wells). */
+const TOOL_ICON_ACCENTS = [
+  "text-sky-400",
+  "text-violet-400",
+  "text-emerald-400",
+  "text-amber-400",
+  "text-rose-400",
+  "text-cyan-400",
+  "text-indigo-400",
+  "text-orange-400",
+  "text-teal-400",
+  "text-fuchsia-400",
+  "text-lime-400",
+  "text-blue-400",
 ] as const;
 
 const CATEGORY_ICON_TONES: Record<CategorySlug, string> = {
@@ -104,6 +147,11 @@ function hashSlug(slug: string) {
 /** Stable per-tool well classes (border + bg + icon color). */
 export function getToolIconTone(slug: ToolSlug | string) {
   return TOOL_ICON_TONES[hashSlug(slug) % TOOL_ICON_TONES.length];
+}
+
+/** Stable per-tool accent color for large blurred hover decorations. */
+export function getToolIconAccent(slug: ToolSlug | string) {
+  return TOOL_ICON_ACCENTS[hashSlug(slug) % TOOL_ICON_ACCENTS.length];
 }
 
 export function getCategoryIconTone(slug: CategorySlug) {
@@ -209,15 +257,23 @@ export function ToolIcon({
   return <Icon className={cn("size-4", className)} {...props} />;
 }
 
-/** Colored icon well for tool cards / lists. */
+/**
+ * Colored icon well for tool cards / lists.
+ *
+ * Icons are client-mounted only so the homepage HTML is not bloated with dozens of
+ * Lucide SVG path trees (large SSR payload hurts LCP). Fixed well size prevents CLS.
+ */
 export function ToolIconWell({
   slug,
   className,
   iconClassName,
+  eagerIcon = false,
 }: {
   slug: ToolSlug;
   className?: string;
   iconClassName?: string;
+  /** When true, always SSR the icon (tool detail pages). */
+  eagerIcon?: boolean;
 }) {
   return (
     <div
@@ -227,7 +283,11 @@ export function ToolIconWell({
         className,
       )}
     >
-      <ToolIcon slug={slug} className={cn("size-5", iconClassName)} />
+      {eagerIcon ? (
+        <ToolIcon slug={slug} className={cn("size-5", iconClassName)} />
+      ) : (
+        <LazyToolIcon slug={slug} className={cn("size-5", iconClassName)} />
+      )}
     </div>
   );
 }

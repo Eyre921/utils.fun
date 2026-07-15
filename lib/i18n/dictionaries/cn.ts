@@ -14,7 +14,7 @@ export const cnDictionary: DictionaryMessages = {
   homeTitle: "简单好用的在线工具站",
   homeIntro:
     "聚合常用开发、文本、时间、图片、编码与生成类工具，打开即用，支持多语言切换，并兼顾桌面端与移动端体验。",
-  homeStats: "共收录 {count} 个工具。",
+  homeStats: "共收录 {count} 个工具",
   searchPlaceholder: "搜索工具、场景或关键词",
   allCategories: "全部模块",
   toolListTitle: "工具清单",

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "image-compare-viewer/dist/image-compare-viewer.min.css";
+/* image-compare-viewer CSS is loaded only by legacy image tools (see legacy.tsx) */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -296,6 +296,28 @@ body {
 
 a {
   text-decoration: none;
+}
+
+/* Buttons and button-like links must never pick up underlines from <a> or UA styles */
+button,
+[data-slot="button"],
+a[data-slot="button"] {
+  text-decoration: none;
+}
+
+button:hover,
+[data-slot="button"]:hover,
+a[data-slot="button"]:hover,
+button:focus-visible,
+[data-slot="button"]:focus-visible,
+a[data-slot="button"]:focus-visible {
+  text-decoration: none;
+}
+
+/* Intentional text-link button variant only */
+[data-slot="button"][data-variant="link"]:hover,
+[data-slot="button"][data-variant="link"]:focus-visible {
+  text-decoration: underline;
 }
 
 @layer base {

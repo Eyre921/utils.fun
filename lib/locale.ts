@@ -156,8 +156,13 @@ export function getLocaleNumberFormat(locale: Locale) {
   return getLocaleConfig(locale).numberFormat;
 }
 
+export function getLocaleFlagEmoji(locale: Locale) {
+  return getLocaleConfig(locale).flagEmoji;
+}
+
+/** @deprecated Use getLocaleFlagEmoji — Iconify network icons were removed for Lighthouse. */
 export function getLocaleFlagIcon(locale: Locale) {
-  return getLocaleConfig(locale).flagIcon;
+  return getLocaleFlagEmoji(locale);
 }
 
 export function getLocaleLabel(locale: Locale) {

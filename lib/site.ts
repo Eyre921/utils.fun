@@ -35,8 +35,8 @@ export function createSiteConfig(
       ? {
           src: settings.logo.src,
           alt: logoAlt,
-          width: settings.logo.width ?? 36,
-          height: settings.logo.height ?? 36,
+          width: settings.logo.width ?? 72,
+          height: settings.logo.height ?? 72,
         }
       : null;
 

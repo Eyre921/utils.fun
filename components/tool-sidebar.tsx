@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Star } from "lucide-react";
+import { useMemo } from "react";
 
 import { useFavorites } from "@/components/providers/favorites-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,10 +12,26 @@ import {
   getCategoryIconTone,
   ToolIconWell,
 } from "@/components/tool-icon";
-import { getDictionary } from "@/lib/i18n";
 import { buildToolPath, stripLocalePrefix, type PathPrefix } from "@/lib/locale";
-import { type Locale, type ToolSlug } from "@/lib/tools";
+import { type CategorySlug, type Locale, type ToolSlug } from "@/lib/tools";
 import { cn } from "@/lib/utils";
+
+export type SidebarToolItem = {
+  slug: ToolSlug;
+  category: CategorySlug;
+  title: string;
+};
+
+export type SidebarCategoryItem = {
+  slug: CategorySlug;
+  title: string;
+};
+
+export type ToolSidebarLabels = {
+  myFavorites: string;
+  favoriteEmpty: string;
+  categoryNavTitle: string;
+};
 
 function SidebarToolLink({
   href,
@@ -31,8 +48,9 @@ function SidebarToolLink({
     <Link
       href={href}
       scroll
+      prefetch={false}
       className={cn(
-        "flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground",
+        "flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm text-muted-foreground no-underline transition-colors hover:bg-muted/70 hover:text-foreground hover:no-underline",
         active && "bg-muted font-medium text-foreground shadow-2xs ring-1 ring-border/80",
       )}
     >
@@ -52,21 +70,30 @@ export function ToolSidebar({
   currentSlug,
   variant = "docs",
   className,
+  tools,
+  categories,
+  labels,
 }: {
   locale: Locale;
   pathPrefix: PathPrefix;
   currentSlug?: ToolSlug;
   variant?: "docs" | "plain";
   className?: string;
+  tools: SidebarToolItem[];
+  categories: SidebarCategoryItem[];
+  labels: ToolSidebarLabels;
 }) {
-  const dict = getDictionary(locale);
   const { favorites, hydrated } = useFavorites();
   const pathname = usePathname() ?? "";
   const derivedSlug = stripLocalePrefix(pathname).split("/").filter(Boolean)[0];
   const activeSlug = (currentSlug ?? derivedSlug) as ToolSlug | undefined;
-  const favoriteItems = favorites
-    .map((slug) => dict.tools.find((tool) => tool.slug === slug))
-    .filter((tool): tool is (typeof dict.tools)[number] => Boolean(tool));
+
+  const favoriteItems = useMemo(() => {
+    const toolMap = new Map(tools.map((tool) => [tool.slug, tool]));
+    return favorites
+      .map((slug) => toolMap.get(slug))
+      .filter((tool): tool is SidebarToolItem => Boolean(tool));
+  }, [favorites, tools]);
 
   const content = (
     <div className="grid gap-6 pr-2">
@@ -76,7 +103,7 @@ export function ToolSidebar({
             <span className="flex size-6 items-center justify-center rounded-md border border-border bg-muted text-foreground">
               <Star className="size-3.5" />
             </span>
-            <span>{dict.myFavorites}</span>
+            <span>{labels.myFavorites}</span>
           </div>
           {favoriteItems.length ? (
             <div className="ml-4 grid gap-1 border-l border-border/50 pl-3">
@@ -84,7 +111,7 @@ export function ToolSidebar({
                 <SidebarToolLink
                   key={tool.slug}
                   href={buildToolPath(pathPrefix, tool.slug)}
-                  title={tool.title[locale]}
+                  title={tool.title}
                   slug={tool.slug}
                   active={tool.slug === activeSlug}
                 />
@@ -92,18 +119,18 @@ export function ToolSidebar({
             </div>
           ) : (
             <div className="ml-4 rounded-xl border border-dashed border-border/60 px-3 py-3 text-sm text-muted-foreground">
-              {dict.favoriteEmpty}
+              {labels.favoriteEmpty}
             </div>
           )}
         </section>
       ) : null}
 
       <div className="px-1 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-        {dict.categoryNavTitle}
+        {labels.categoryNavTitle}
       </div>
 
-      {dict.categories.map((category) => {
-        const items = dict.tools.filter((tool) => tool.category === category.slug);
+      {categories.map((category) => {
+        const items = tools.filter((tool) => tool.category === category.slug);
 
         return (
           <section key={category.slug} className="grid gap-2.5">
@@ -117,7 +144,7 @@ export function ToolSidebar({
                 <CategoryIcon slug={category.slug} className="size-3.5" />
               </span>
               <span className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                {category.title[locale]}
+                {category.title}
               </span>
             </div>
             <div className="ml-4 grid gap-1 border-l border-border/50 pl-3">
@@ -125,7 +152,7 @@ export function ToolSidebar({
                 <SidebarToolLink
                   key={tool.slug}
                   href={buildToolPath(pathPrefix, tool.slug)}
-                  title={tool.title[locale]}
+                  title={tool.title}
                   slug={tool.slug}
                   active={tool.slug === activeSlug}
                 />

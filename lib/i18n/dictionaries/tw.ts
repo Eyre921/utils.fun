@@ -14,7 +14,7 @@ export const twDictionary: DictionaryMessages = {
   homeTitle: "簡單好用的線上工具站",
   homeIntro:
     "聚合常用開發、文本、時間、圖片、編碼與生成類工具，打開即用，支援多語言切換，並兼顧桌面端與行動端體驗。",
-  homeStats: "共收錄 {count} 個工具。",
+  homeStats: "共收錄 {count} 個工具",
   searchPlaceholder: "搜尋工具、場景或關鍵字",
   allCategories: "全部模組",
   toolListTitle: "工具清單",

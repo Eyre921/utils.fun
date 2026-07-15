@@ -97,7 +97,7 @@ export function ToolSearchDialog({
         aria-label={dict.searchTools}
         title={dict.searchShortcut}
         className={cn(
-          "size-8 rounded-full p-0 sm:h-10 sm:w-auto sm:px-3",
+          "size-11 min-h-11 min-w-11 rounded-full p-0 sm:h-11 sm:w-auto sm:px-3",
           triggerClassName,
         )}
       >

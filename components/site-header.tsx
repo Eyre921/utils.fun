@@ -1,18 +1,46 @@
 "use client";
 
 import type * as React from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Github } from "lucide-react";
 
 import { MobileSidebarDrawer } from "@/components/mobile-sidebar-drawer";
 import { useSiteConfig } from "@/components/providers/site-config-provider";
-import { LocaleToggle } from "@/components/locale-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { ToolSearchDialog } from "@/components/tool-search-dialog";
 import { Button } from "@/components/ui/button";
 import { type PathPrefix } from "@/lib/locale";
 import { type Locale } from "@/lib/tools";
+
+const LocaleToggle = dynamic(
+  () => import("@/components/locale-toggle").then((mod) => mod.LocaleToggle),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="size-11 shrink-0 rounded-xl border border-input bg-background" aria-hidden />
+    ),
+  },
+);
+
+const ThemeToggle = dynamic(
+  () => import("@/components/theme-toggle").then((mod) => mod.ThemeToggle),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="size-11 shrink-0 rounded-xl border border-input bg-background" aria-hidden />
+    ),
+  },
+);
+
+const ToolSearchDialog = dynamic(
+  () => import("@/components/tool-search-dialog").then((mod) => mod.ToolSearchDialog),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="size-11 shrink-0 rounded-full border border-input bg-background sm:h-11 sm:w-28" aria-hidden />
+    ),
+  },
+);
 
 export function SiteHeader({
   locale,
@@ -63,7 +91,7 @@ export function SiteHeader({
               {mobileNavigation}
             </MobileSidebarDrawer>
           ) : null}
-          <Link href={homePath} className="flex items-center gap-3">
+          <Link href={homePath} className="flex items-center gap-3 no-underline hover:no-underline">
             {siteConfig.logo ? (
               <div className="flex size-8 items-center justify-center overflow-hidden rounded-xl bg-background sm:size-9">
                 {/* Use a plain img so Docker/runtime env can point to any local or remote logo URL. */}
@@ -73,6 +101,8 @@ export function SiteHeader({
                   alt={siteConfig.logo.alt}
                   width={siteConfig.logo.width}
                   height={siteConfig.logo.height}
+                  decoding="async"
+                  fetchPriority="high"
                   className="size-full object-contain"
                 />
               </div>
@@ -95,7 +125,7 @@ export function SiteHeader({
               dark: dict.themeDark,
             }}
           />
-          <Button asChild type="button" variant="outline" size="icon" className="size-8 shrink-0 sm:size-10">
+          <Button asChild type="button" variant="outline" size="icon" className="size-11 min-h-11 min-w-11 shrink-0">
             <a
               href={siteConfig.githubUrl}
               target="_blank"

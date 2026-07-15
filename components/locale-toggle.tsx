@@ -1,6 +1,5 @@
 "use client";
 
-import { Icon } from "@iconify/react";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -10,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { LocaleFlag } from "@/components/locale-flag";
 import {
-  getLocaleFlagIcon,
   getLocaleLabel,
   getLocaleSwitchTargetPath,
   persistLocaleCookie,
@@ -44,7 +43,6 @@ export function LocaleToggle({
   const items = locales.map((item) => ({
     key: item,
     label: getLocaleLabel(item),
-    icon: getLocaleFlagIcon(item),
   }));
   const current = items.find((item) => item.key === locale) ?? items[0];
   const trigger = (
@@ -53,9 +51,10 @@ export function LocaleToggle({
       variant="outline"
       size="icon"
       aria-label={label}
-      className={cn("size-8 sm:size-10", triggerClassName)}
+      title={label}
+      className={cn("size-11 min-h-11 min-w-11", triggerClassName)}
     >
-      <Icon icon={current.icon} className="size-4 sm:size-5" />
+      <LocaleFlag locale={current.key} className="h-[1.05rem] sm:h-5" />
     </Button>
   );
 
@@ -91,7 +90,7 @@ export function LocaleToggle({
             }}
           >
             <span className="flex items-center gap-2">
-              <Icon icon={item.icon} className="size-5" />
+              <LocaleFlag locale={item.key} />
               <span>{item.label}</span>
             </span>
             {locale === item.key ? <Check className="size-4" /> : null}

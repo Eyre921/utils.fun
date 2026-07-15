@@ -23,7 +23,7 @@ export function MobileSidebarDrawer({
         type="button"
         variant="outline"
         size="icon"
-        className="size-8 shrink-0 rounded-lg lg:hidden sm:size-10"
+        className="size-11 min-h-11 min-w-11 shrink-0 rounded-lg lg:hidden"
         onClick={() => setOpen(true)}
         aria-label={triggerLabel}
       >
@@ -34,17 +34,20 @@ export function MobileSidebarDrawer({
           <SheetHeader className="border-b px-4 py-3 sm:px-6 sm:py-4">
             <SheetTitle>{title}</SheetTitle>
           </SheetHeader>
-          <div
-            className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            onClick={(event) => {
-              const target = event.target as HTMLElement;
-              if (target.closest("a")) {
-                setOpen(false);
-              }
-            }}
-          >
-            <div className="h-full px-4 py-4 sm:px-6">{children}</div>
-          </div>
+          {/* Mount nav only while open — keeps initial homepage HTML lighter for LCP */}
+          {open ? (
+            <div
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onClick={(event) => {
+                const target = event.target as HTMLElement;
+                if (target.closest("a")) {
+                  setOpen(false);
+                }
+              }}
+            >
+              <div className="h-full px-4 py-4 sm:px-6">{children}</div>
+            </div>
+          ) : null}
         </SheetContent>
       </Sheet>
     </>

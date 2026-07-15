@@ -40,11 +40,15 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     applicationName: siteConfig.title,
     description: siteConfig.description,
-    icons: siteConfig.logo
-      ? {
-          icon: siteConfig.logo.src,
-        }
-      : undefined,
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "32x32" },
+        { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+        ...(siteConfig.logo
+          ? [{ url: siteConfig.logo.src, type: "image/png", sizes: "72x72" }]
+          : []),
+      ],
+    },
   };
 }
 

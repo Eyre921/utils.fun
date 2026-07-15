@@ -22,6 +22,8 @@ import imageCompression from "browser-image-compression";
 import CryptoJS from "crypto-js";
 import dayjs from "dayjs";
 import ImageCompare from "image-compare-viewer";
+// Scoped CSS: do not load on homepage / non-image tools
+import "image-compare-viewer/dist/image-compare-viewer.min.css";
 import JsBarcode from "jsbarcode";
 import JsonToTS from "json-to-ts";
 import jsQR from "jsqr";

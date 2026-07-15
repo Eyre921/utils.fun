@@ -7,10 +7,11 @@ export const siteSettings = {
     "A clean online toolbox for development, text, time, image, encoding, and quick generation tasks.",
   url: "https://utils.fun",
   logo: {
+    // Intrinsic file is 72×72 (2× retina for 36 CSS px header slot)
     src: "/logo.png",
     alt: "Utils.fun logo",
-    width: 36,
-    height: 36,
+    width: 72,
+    height: 72,
   },
   footerHtml: `<p>&copy; ${new Date().getFullYear()} Utils.fun. All rights reserved.</p>`,
   githubUrl: "https://github.com/Licoy/utils.fun",

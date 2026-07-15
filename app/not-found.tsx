@@ -16,8 +16,8 @@ export default async function NotFound() {
       <h1 className="text-4xl font-semibold tracking-tight">
         {dict.notFound}
       </h1>
-      <Button asChild>
-        <Link href="/">
+      <Button asChild className="no-underline hover:no-underline">
+        <Link href="/" className="no-underline hover:no-underline">
           {dict.backHome}
         </Link>
       </Button>

@@ -17,6 +17,35 @@ export function ToolLayout({
 }) {
   const dict = getDictionary(locale);
   const homePath = getHomePath(pathPrefix);
+  const sidebarTools = dict.tools.map((tool) => ({
+    slug: tool.slug,
+    category: tool.category,
+    title: tool.title[locale],
+  }));
+  const sidebarCategories = dict.categories.map((category) => ({
+    slug: category.slug,
+    title: category.title[locale],
+  }));
+  const sidebarLabels = {
+    myFavorites: dict.myFavorites,
+    favoriteEmpty: dict.favoriteEmpty,
+    categoryNavTitle: dict.categoryNavTitle,
+  };
+  const headerDict = {
+    localeLabel: dict.localeLabel,
+    languageLabel: dict.languageLabel,
+    themeLabel: dict.themeLabel,
+    githubLabel: dict.githubLabel,
+    themeSystem: dict.themeSystem,
+    themeLight: dict.themeLight,
+    themeDark: dict.themeDark,
+    menuLabel: dict.menuLabel,
+    searchTools: dict.searchTools,
+    searchDialogTitle: dict.searchDialogTitle,
+    searchDialogHint: dict.searchDialogHint,
+    searchShortcut: dict.searchShortcut,
+    closeLabel: dict.closeLabel,
+  };
 
   return (
     <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-background">
@@ -25,13 +54,16 @@ export function ToolLayout({
           locale={locale}
           homePath={homePath}
           pathPrefix={pathPrefix}
-          dict={dict}
+          dict={headerDict}
           mobileNavigationTitle={dict.categoryNavTitle}
           mobileNavigation={
             <ToolSidebar
               locale={locale}
               pathPrefix={pathPrefix}
               variant="docs"
+              tools={sidebarTools}
+              categories={sidebarCategories}
+              labels={sidebarLabels}
             />
           }
         />
@@ -45,6 +77,9 @@ export function ToolLayout({
             locale={locale}
             pathPrefix={pathPrefix}
             variant="docs"
+            tools={sidebarTools}
+            categories={sidebarCategories}
+            labels={sidebarLabels}
           />
         </aside>
 
