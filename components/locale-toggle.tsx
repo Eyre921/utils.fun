@@ -54,7 +54,8 @@ export function LocaleToggle({
       title={label}
       className={cn("size-11 min-h-11 min-w-11", triggerClassName)}
     >
-      <LocaleFlag locale={current.key} className="h-[1.05rem] sm:h-5" />
+      {/* Smaller than line icons — solid flags read heavier at the same box size */}
+      <LocaleFlag locale={current.key} className="!h-3.5 !w-[1.3125rem] sm:!h-4 sm:!w-6" />
     </Button>
   );
 

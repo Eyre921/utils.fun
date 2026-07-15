@@ -41,7 +41,7 @@ export function LocaleFlag({
     <Flag
       aria-hidden
       className={cn(
-        "inline-block aspect-[3/2] h-4 w-auto shrink-0 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.08)]",
+        "inline-block h-3.5 w-[1.3125rem] shrink-0 rounded-[2px] object-cover shadow-[0_0_0_1px_rgba(0,0,0,0.08)]",
         className,
       )}
     />
