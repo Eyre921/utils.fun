@@ -8,7 +8,6 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  basePath: "/edgeone-makers-tools",
   turbopack: {
     root: projectRoot,
   },
