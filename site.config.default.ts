@@ -15,7 +15,8 @@ export const siteSettings = {
     height: 72,
   },
   footerHtml: `<p>&copy; ${new Date().getFullYear()} 个人工具小助手. All rights reserved. · ${ICP_HTML}</p>`,
-  githubUrl: "https://github.com/Eyre921/utils.fun",
+  // 留空则页头不显示源码链接
+  githubUrl: "",
   i18n: {
     cn: {
       title: "个人工具小助手",

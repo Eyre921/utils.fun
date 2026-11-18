@@ -125,6 +125,7 @@ export function SiteHeader({
               dark: dict.themeDark,
             }}
           />
+          {siteConfig.githubUrl ? (
           <Button asChild type="button" variant="outline" size="icon" className="size-11 min-h-11 min-w-11 shrink-0">
             <a
               href={siteConfig.githubUrl}
@@ -136,6 +137,7 @@ export function SiteHeader({
               <Github className="size-3.5 sm:size-4" />
             </a>
           </Button>
+          ) : null}
         </div>
       </div>
     </header>
